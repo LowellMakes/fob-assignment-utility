@@ -2,6 +2,7 @@ import tkinter
 import requests
 import pandas as pd
 from tkinter import ttk
+import time
 
 class AutocompleteCombobox(ttk.Combobox):
 
@@ -57,8 +58,10 @@ class AutocompleteCombobox(ttk.Combobox):
         # list at the position of the autocompletion
 
 class SignUpAll():
-    """docstring for SignUpAll"""
+    """KeyFob Assignment utility"""
     def __init__(self, master):
+
+        self.doorflowStatus = False
 
         self.top = master
         self.users = None
@@ -80,19 +83,43 @@ class SignUpAll():
         refreshButton.grid(row=3, column=2)
 
     def getNamesFromNexudus(self):
-    
-        nexudus_auth = ('brown.b774@gmail.com', b'ap5{qyxS?1(T9')
+        """Pull the list of users from nexudus and return a list of the names"""
+        nexudus_auth = ('', b'')
         url = "https://spaces.nexudus.com/api/spaces/coworkers?size=500"
         all_users = requests.get(url, auth=nexudus_auth)
         all_users = pd.DataFrame(all_users.json()['Records'])
         names = all_users.FullName.to_list()
+        all_users = None
+        names = ['name1','name2','name3']
         self.users = all_users
 
         return names
 
     def startAssignment(self):
-
+        """Wait for a signal from DoorFlow and assign the fob number to the appropriate user"""
         name = self.selectedName.get()
+        self.statusWindow = tkinter.Toplevel(self.top)
+        self.statusWindow.configure(bg='green')
+        waitLabel = tkinter.Label(self.statusWindow, text='Hit Fob against the reader now')
+        waitLabel.grid()
+
+        self.doorflowStatus = False
+
+        self.checkDoorFlow()
+
+    def checkDoorFlow(self):
+
+        if self.doorflowStatus == False:
+            doorflow_auth = requests.auth.HTTPBasicAuth('3zxv-BQUSiSyER5UxrM4','x')
+            time.sleep(2)
+            print('Response Recieved')
+            self.statusWindow.destroy()
+            self.doorflowStatus = True
+        elif self.doorflowStatus == True:
+            print('Do Nothing')
+
+        self.top.after(2000, self.checkDoorFlow)
+
 
 
 if __name__ == '__main__':
